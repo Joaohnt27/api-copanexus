@@ -125,37 +125,40 @@ public class UsuarioController {
     public ResponseEntity<?> atualizarPerfil(@PathVariable Long id, @RequestBody UsuarioUpdateDTO dto) {
         return repository.findById(id).map(usuario -> {
 
-            // 1. Sanitização de Nome (Previne XSS)
+            // Proteção contra Null: Só processa se o nome não for nulo
             if (dto.nome() != null && !dto.nome().isBlank()) {
                 usuario.setNome(dto.nome().replaceAll("<[^>]*>", ""));
             }
 
-            // 2. Validação de E-mail
-            if (dto.email() != null && !dto.email().equals(usuario.getEmail())) {
-                // Garante que o novo e-mail não pertence a outro usuário
-                if (repository.findByEmail(dto.email()).isPresent()) {
-                    return ResponseEntity.badRequest().body("E-mail já cadastrado por outro usuário.");
-                }
-                usuario.setEmail(dto.email());
+            // 1. NOME: Pode mudar livremente (Sanitizado)
+            if (dto.nome() != null && !dto.nome().isBlank()) {
+                usuario.setNome(dto.nome().replaceAll("<[^>]*>", ""));
             }
 
-            // 3. Troca de Senha com Validação de Identidade
-            if (dto.novaSenha() != null && !dto.novaSenha().isBlank()) {
-                // O usuário TEM que mandar a senha atual para mudar para uma nova
+            // 2. SEGURANÇA: Se quer mudar e-mail ou senha, EXIGE a senha antiga
+            boolean querMudarEmail = dto.email() != null && !dto.email().isBlank() && !dto.email().equals(usuario.getEmail());
+            boolean querMudarSenha = dto.novaSenha() != null && !dto.novaSenha().isBlank();
+
+            if (querMudarEmail || querMudarSenha) {
+                // Se não mandou a senha antiga ou ela não bate, bloqueia!
                 if (dto.senhaAntiga() == null || !encoder.matches(dto.senhaAntiga(), usuario.getSenha())) {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha atual incorreta.");
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha atual necessária para alterar dados sensíveis.");
                 }
 
-                // Valida o tamanho mínimo da nova senha
-                if (dto.novaSenha().length() < 6) {
-                    return ResponseEntity.badRequest().body("A nova senha deve ter no mínimo 6 caracteres.");
+                if (querMudarEmail) {
+                    if (repository.findByEmail(dto.email()).isPresent()) {
+                        return ResponseEntity.badRequest().body("E-mail já cadastrado.");
+                    }
+                    usuario.setEmail(dto.email());
                 }
 
-                usuario.setSenha(encoder.encode(dto.novaSenha()));
+                if (querMudarSenha) {
+                    usuario.setSenha(encoder.encode(dto.novaSenha()));
+                }
             }
 
             repository.save(usuario);
-            return ResponseEntity.ok("Perfil atualizado com sucesso!");
+            return ResponseEntity.ok("Perfil atualizado!");
 
         }).orElse(ResponseEntity.notFound().build());
     }
