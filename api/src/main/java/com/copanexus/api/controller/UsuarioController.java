@@ -1,5 +1,7 @@
 package com.copanexus.api.controller;
 
+import com.copanexus.api.dto.UsuarioResponseDTO;
+import com.copanexus.api.dto.UsuarioUpdateDTO;
 import com.copanexus.api.model.Figurinhas;
 import com.copanexus.api.model.Usuario;
 import com.copanexus.api.repository.FigurinhasRepository;
@@ -10,10 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -37,18 +38,22 @@ public class UsuarioController {
 
     // ROTA: POST http://localhost:8080/api/usuarios/registrar
     @PostMapping("/registrar")
-    public ResponseEntity<Usuario> registrar(@Valid @RequestBody Usuario usuario) {
+    public ResponseEntity<UsuarioResponseDTO> registrar(@Valid @RequestBody Usuario usuario) {
         // Verifica se o e-mail já existe
         if (repository.findByEmail(usuario.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
         // Criptografia
-        String senhaCriptografada = encoder.encode(usuario.getSenha());
-        usuario.setSenha(senhaCriptografada);
+        usuario.setSenha(encoder.encode(usuario.getSenha()));
 
+        // Salva no banco
         Usuario salvo = repository.save(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
+
+        // Senha morre no banco e nunca retorna para o front
+        UsuarioResponseDTO resposta = UsuarioResponseDTO.transformar(salvo);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
     }
 
     @PostMapping("/login")
@@ -96,5 +101,62 @@ public class UsuarioController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().body("Erro ao colar figurinha.");
+    }
+
+    @GetMapping("/{id}/progresso")
+    public ResponseEntity<Map<String, Object>> obterProgresso(@PathVariable Long id) {
+        return repository.findById(id).map(usuario -> {
+            int totalFigurinhas = 980;
+            int minhasFigurinhas = usuario.getColecao().size();
+
+            // Cálculo da porcentagem (Regra de 3 básica)
+            double porcentagem = (double) minhasFigurinhas / totalFigurinhas * 100;
+
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("total", totalFigurinhas);
+            stats.put("obtidas", minhasFigurinhas);
+            stats.put("porcentagem", Math.round(porcentagem * 100.0) / 100.0);
+
+            return ResponseEntity.ok(stats);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/perfil")
+    public ResponseEntity<?> atualizarPerfil(@PathVariable Long id, @RequestBody UsuarioUpdateDTO dto) {
+        return repository.findById(id).map(usuario -> {
+
+            // 1. Sanitização de Nome (Previne XSS)
+            if (dto.nome() != null && !dto.nome().isBlank()) {
+                usuario.setNome(dto.nome().replaceAll("<[^>]*>", ""));
+            }
+
+            // 2. Validação de E-mail
+            if (dto.email() != null && !dto.email().equals(usuario.getEmail())) {
+                // Garante que o novo e-mail não pertence a outro usuário
+                if (repository.findByEmail(dto.email()).isPresent()) {
+                    return ResponseEntity.badRequest().body("E-mail já cadastrado por outro usuário.");
+                }
+                usuario.setEmail(dto.email());
+            }
+
+            // 3. Troca de Senha com Validação de Identidade
+            if (dto.novaSenha() != null && !dto.novaSenha().isBlank()) {
+                // O usuário TEM que mandar a senha atual para mudar para uma nova
+                if (dto.senhaAntiga() == null || !encoder.matches(dto.senhaAntiga(), usuario.getSenha())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha atual incorreta.");
+                }
+
+                // Valida o tamanho mínimo da nova senha
+                if (dto.novaSenha().length() < 6) {
+                    return ResponseEntity.badRequest().body("A nova senha deve ter no mínimo 6 caracteres.");
+                }
+
+                usuario.setSenha(encoder.encode(dto.novaSenha()));
+            }
+
+            repository.save(usuario);
+            return ResponseEntity.ok("Perfil atualizado com sucesso!");
+
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
