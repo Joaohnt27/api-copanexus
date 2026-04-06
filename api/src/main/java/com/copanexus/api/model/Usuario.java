@@ -7,10 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Entity
@@ -59,6 +56,11 @@ import java.util.Set;
     @MapKeyColumn(name = "figurinha_numero") // A Chave (Qual é a figurinha)
     @Column(name = "quantidade")             // O Valor (Quantas ele tem repetida)
     private Map<Integer, Integer> repetidas = new HashMap<>();
+
+    // Histórico Financeiro
+    @JsonIgnore
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transacao> transacoes;
 
     public Usuario() {}
 }
