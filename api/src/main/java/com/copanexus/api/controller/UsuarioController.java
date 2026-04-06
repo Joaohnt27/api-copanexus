@@ -142,6 +142,22 @@ public class UsuarioController {
         return ResponseEntity.badRequest().body("Erro ao colar figurinha.");
     }
 
+    // ROTA: DELETE http://localhost:8080/api/usuarios/{id}/descolar/{numero}
+    @DeleteMapping("/{id}/descolar/{numero}")
+    @Transactional
+    public ResponseEntity<?> descolarFigurinha(@PathVariable Long id, @PathVariable Integer numero) {
+        return repository.findById(id).map(usuario -> {
+            // Remove da lista comparando pelo número da figurinha
+            boolean removido = usuario.getColecao().removeIf(f -> f.getNumero().equals(numero));
+
+            if (removido) {
+                repository.save(usuario);
+                return ResponseEntity.ok("Figurinha removida da coleção.");
+            }
+            return ResponseEntity.badRequest().body("Figurinha não encontrada na coleção.");
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{id}/progresso")
     public ResponseEntity<Map<String, Object>> obterProgresso(@PathVariable Long id) {
         return repository.findById(id).map(usuario -> {
