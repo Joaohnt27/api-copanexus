@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Data
@@ -37,6 +38,13 @@ import java.util.*;
     @Size(min = 6)
     @Column(nullable = false)
     private String senha;
+
+    // Esqueceu senha
+    @JsonIgnore
+    private String codigoRecuperacao;
+
+    @JsonIgnore
+    private LocalDateTime validadeCodigo;
 
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)

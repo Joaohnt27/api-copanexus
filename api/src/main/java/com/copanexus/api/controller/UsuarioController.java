@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -259,5 +261,59 @@ public class UsuarioController {
 
             return ResponseEntity.badRequest().body("Figurinha não encontrada nas repetidas.");
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // ROTA 1: O usuário digita o e-mail e pede o código
+    @PostMapping("/esqueci-senha")
+    public ResponseEntity<?> solicitarRecuperacao(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+
+        return repository.findByEmail(email).map(usuario -> {
+            // Gera um código de 6 dígitos aleatório
+            String codigo = String.format("%06d", new java.util.Random().nextInt(999999));
+
+            // Salva o código no banco e diz que vale por 15 minutos
+            usuario.setCodigoRecuperacao(codigo);
+            usuario.setValidadeCodigo(LocalDateTime.now().plusMinutes(15));
+            repository.save(usuario);
+
+            // Dispara o e-mail (usando try/catch para não quebrar a API)
+            try {
+                emailService.enviarEmailRecuperacaoSenha(usuario.getEmail(), codigo);
+            } catch (Exception e) {
+                return ResponseEntity.internalServerError().body("Erro ao enviar e-mail.");
+            }
+
+            return ResponseEntity.ok("Código de recuperação enviado para o e-mail.");
+        }).orElse(ResponseEntity.badRequest().body("Se este e-mail existir, um código foi enviado."));
+        // Dica de segurança: Nunca diga se o e-mail existe ou não, para evitar hackers testando e-mails!
+    }
+
+    // ROTA 2: O usuário digita o código e a senha nova
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity<?> redefinirSenha(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String codigoDigitado = request.get("codigo");
+        String novaSenha = request.get("novaSenha");
+
+        return repository.findByEmail(email).map(usuario -> {
+            // Verifica se tem código gerado
+            if (usuario.getCodigoRecuperacao() == null || !usuario.getCodigoRecuperacao().equals(codigoDigitado)) {
+                return ResponseEntity.badRequest().body("Código inválido.");
+            }
+
+            // Verifica se o código expirou
+            if (LocalDateTime.now().isAfter(usuario.getValidadeCodigo())) {
+                return ResponseEntity.badRequest().body("Este código expirou. Solicite um novo.");
+            }
+
+            // Tudo certo! Criptografa a nova senha e apaga o código usado
+            usuario.setSenha(encoder.encode(novaSenha));
+            usuario.setCodigoRecuperacao(null);
+            usuario.setValidadeCodigo(null);
+            repository.save(usuario);
+
+            return ResponseEntity.ok("Senha redefinida com sucesso!");
+        }).orElse(ResponseEntity.badRequest().body("Usuário não encontrado."));
     }
 }
