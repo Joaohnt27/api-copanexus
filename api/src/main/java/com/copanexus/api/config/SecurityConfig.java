@@ -12,7 +12,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Esta é a ferramenta que vamos usar para cifrar
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -130,12 +130,12 @@ public class UsuarioController {
                 usuario.setNome(dto.nome().replaceAll("<[^>]*>", ""));
             }
 
-            // 1. NOME: Pode mudar livremente (Sanitizado)
+            // NOME: Pode mudar livremente (Sanitizado)
             if (dto.nome() != null && !dto.nome().isBlank()) {
                 usuario.setNome(dto.nome().replaceAll("<[^>]*>", ""));
             }
 
-            // 2. SEGURANÇA: Se quer mudar e-mail ou senha, EXIGE a senha antiga
+            // SEGURANÇA: Se quer mudar e-mail ou senha, EXIGE a senha antiga
             boolean querMudarEmail = dto.email() != null && !dto.email().isBlank() && !dto.email().equals(usuario.getEmail());
             boolean querMudarSenha = dto.novaSenha() != null && !dto.novaSenha().isBlank();
 
@@ -160,6 +160,93 @@ public class UsuarioController {
             repository.save(usuario);
             return ResponseEntity.ok("Perfil atualizado!");
 
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // ROTA: DELETE http://localhost:8080/api/usuarios/{id}
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> deletarConta(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        try {
+            Optional<Usuario> usuarioOpt = repository.findById(id);
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Usuario usuario = usuarioOpt.get();
+            String senhaDigitada = request.get("senha");
+
+            // Trava de Segurança
+            if (senhaDigitada == null || !encoder.matches(senhaDigitada, usuario.getSenha())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha atual incorreta.");
+            }
+
+            // Limpa a mochila de figurinhas
+            usuario.getColecao().clear();
+            usuario.getRepetidas().clear();
+
+            // O 'saveAndFlush' FORÇA o banco a deletar as relações AGORA MESMO!
+            repository.saveAndFlush(usuario);
+
+            // Agora que o usuário está limpo, o banco deixa dar o tiro final
+            repository.delete(usuario);
+
+            return ResponseEntity.ok("Conta excluída com sucesso.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro fatal no banco: " + e.getMessage());
+        }
+    }
+
+    // ROTA: GET http://localhost:8080/api/usuarios/{id}/repetidas
+    @GetMapping("/{id}/repetidas")
+    public ResponseEntity<Map<Integer, Integer>> buscarRepetidas(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(usuario -> ResponseEntity.ok(usuario.getRepetidas()))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ROTA: POST http://localhost:8080/api/usuarios/{id}/repetidas/adicionar/{numero}
+    @PostMapping("/{id}/repetidas/adicionar/{numero}")
+    @Transactional
+    public ResponseEntity<?> adicionarRepetida(@PathVariable Long id, @PathVariable Integer numero) {
+        return repository.findById(id).map(usuario -> {
+            Map<Integer, Integer> repetidas = usuario.getRepetidas();
+
+            repetidas.put(numero, repetidas.getOrDefault(numero, 0) + 1);
+
+            // Força o Java a enfiar isso no banco NA MESMA HORA
+            repository.saveAndFlush(usuario);
+
+            return ResponseEntity.ok(repetidas);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // ROTA: POST http://localhost:8080/api/usuarios/{id}/repetidas/remover/{numero}
+    @PostMapping("/{id}/repetidas/remover/{numero}")
+    @Transactional
+    public ResponseEntity<?> removerRepetida(@PathVariable Long id, @PathVariable Integer numero) {
+        return repository.findById(id).map(usuario -> {
+            Map<Integer, Integer> repetidas = usuario.getRepetidas();
+
+            if (repetidas.containsKey(numero)) {
+                int qtdAtual = repetidas.get(numero);
+
+                if (qtdAtual <= 1) {
+                    // Se só tem 1 e o usuário quer remover, a gente apaga a figurinha completamente da tabela
+                    repetidas.remove(numero);
+                } else {
+                    // Se tem mais de 1, apenas diminui a quantidade
+                    repetidas.put(numero, qtdAtual - 1);
+                }
+
+                repository.save(usuario);
+                return ResponseEntity.ok(repetidas);
+            }
+
+            return ResponseEntity.badRequest().body("Figurinha não encontrada nas repetidas.");
         }).orElse(ResponseEntity.notFound().build());
     }
 }

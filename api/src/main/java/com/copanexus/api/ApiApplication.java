@@ -8,20 +8,19 @@ import org.springframework.context.annotation.Bean;
 import java.util.ArrayList;
 import java.util.List;
 import com.copanexus.api.model.Figurinhas;
-import com.copanexus.api.repository.FigurinhasRepository;
 
 @SpringBootApplication
 public class ApiApplication {
 	@Bean
 	CommandLineRunner popularFigurinhas(FigurinhasRepository repository) {
 		return args -> {
-			// 1. Verificamos se a tabela já está populada para não duplicar dados
+			// Verifica se a tabela já está populada para não duplicar dados
 			if (repository.count() == 0) {
 				System.out.println(">>> Iniciando carga de 980 figurinhas no Neon...");
 
 				List<Figurinhas> listaParaSalvar = new ArrayList<>();
 
-				// 2. Loop de 0 a 979
+				// Loop de 0 a 979
 				for (int i = 0; i <= 979; i++) {
 					Figurinhas f = new Figurinhas();
 					f.setNumero(i);
