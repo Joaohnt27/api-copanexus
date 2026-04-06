@@ -42,12 +42,38 @@ public class UsuarioController {
         return repository.findAll();
     }
 
+    private static final List<String> DOMINIOS_PROIBIDOS = List.of(
+            "teste.com",
+            "abc.com",
+            "123.com",
+            "email.com",
+            "mailinator.com",
+            "tempmail.com",
+            "exemplo.com"
+    );
+
+    private boolean isEmailValido(String email) {
+        if (email == null || !email.contains("@")) return false;
+
+        // Pega tudo que vem depois do @
+        String dominio = email.substring(email.indexOf("@") + 1).toLowerCase();
+
+        // Verifica se o domínio está na lista negra
+        return !DOMINIOS_PROIBIDOS.contains(dominio);
+    }
+
     // ROTA: POST http://localhost:8080/api/usuarios/registrar
         @PostMapping("/registrar")
-        public ResponseEntity<UsuarioResponseDTO> registrar(@Valid @RequestBody Usuario usuario) {
+        public ResponseEntity<?> registrar(@Valid @RequestBody Usuario usuario) {
+            if (!isEmailValido(usuario.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Este domínio de e-mail não é permitido. Use um e-mail válido.");
+            }
+
             // Verifica se o e-mail já existe
             if (repository.findByEmail(usuario.getEmail()).isPresent()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                return ResponseEntity.status(HttpStatus.CONFLICT) // 409 é melhor que 400 para duplicados
+                        .body("Este e-mail já está cadastrado no sistema.");
             }
 
             // Criptografia
@@ -139,11 +165,6 @@ public class UsuarioController {
         return repository.findById(id).map(usuario -> {
 
             // Proteção contra Null: Só processa se o nome não for nulo
-            if (dto.nome() != null && !dto.nome().isBlank()) {
-                usuario.setNome(dto.nome().replaceAll("<[^>]*>", ""));
-            }
-
-            // NOME: Pode mudar livremente (Sanitizado)
             if (dto.nome() != null && !dto.nome().isBlank()) {
                 usuario.setNome(dto.nome().replaceAll("<[^>]*>", ""));
             }
