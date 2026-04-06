@@ -6,6 +6,7 @@ import com.copanexus.api.model.Figurinhas;
 import com.copanexus.api.model.Usuario;
 import com.copanexus.api.repository.FigurinhasRepository;
 import com.copanexus.api.repository.UsuarioRepository;
+import com.copanexus.api.service.EmailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,9 @@ public class UsuarioController {
     @Autowired
     private PasswordEncoder encoder;
 
+    @Autowired
+    private EmailService emailService;
+
     // ROTA: GET http://localhost:8080/api/usuarios
     @GetMapping
     public List<Usuario> listarTodos() {
@@ -37,24 +41,31 @@ public class UsuarioController {
     }
 
     // ROTA: POST http://localhost:8080/api/usuarios/registrar
-    @PostMapping("/registrar")
-    public ResponseEntity<UsuarioResponseDTO> registrar(@Valid @RequestBody Usuario usuario) {
-        // Verifica se o e-mail já existe
-        if (repository.findByEmail(usuario.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        @PostMapping("/registrar")
+        public ResponseEntity<UsuarioResponseDTO> registrar(@Valid @RequestBody Usuario usuario) {
+            // Verifica se o e-mail já existe
+            if (repository.findByEmail(usuario.getEmail()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            // Criptografia
+            usuario.setSenha(encoder.encode(usuario.getSenha()));
+
+            // Salva no banco
+            Usuario salvo = repository.save(usuario);
+
+            try {
+                emailService.enviarEmailBoasVindas(salvo.getEmail(), salvo.getNome());
+                System.out.println("E-mail enviado com sucesso para a caixa do Mailtrap!");
+            } catch (Exception e) {
+                System.err.println("Aviso: Falha ao enviar e-mail de boas-vindas - " + e.getMessage());
+            }
+
+            // Senha morre no banco e nunca retorna para o front
+            UsuarioResponseDTO resposta = UsuarioResponseDTO.transformar(salvo);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
         }
-
-        // Criptografia
-        usuario.setSenha(encoder.encode(usuario.getSenha()));
-
-        // Salva no banco
-        Usuario salvo = repository.save(usuario);
-
-        // Senha morre no banco e nunca retorna para o front
-        UsuarioResponseDTO resposta = UsuarioResponseDTO.transformar(salvo);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
-    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Usuario loginData) {
