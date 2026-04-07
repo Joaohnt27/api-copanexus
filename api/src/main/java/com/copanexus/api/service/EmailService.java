@@ -50,8 +50,8 @@ public class EmailService {
 
             mailSender.send(message);
 
-        } catch (MessagingException e) {
-            System.err.println("Erro ao montar o e-mail HTML: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -61,7 +61,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("suporte@copanexus.com.br");
+            helper.setFrom("copanexusofc@gmail.com");
             helper.setTo(para);
             helper.setSubject("Recuperação de Senha - CopaNexus 🔐");
 
