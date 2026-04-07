@@ -53,6 +53,8 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(List.of(
                 "https://copanexus.vercel.app",
+                "https://copanexus.com.br",
+                "https://www.copanexus.com.br",
                 "http://localhost:3000"
         ));
 

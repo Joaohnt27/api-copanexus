@@ -23,7 +23,8 @@ public class EmailService {
             // O 'true' indica que vamos enviar um e-mail multipart (HTML/Anexos)
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("onboarding@resend.dev");
+            helper.setFrom("boasvindas@copanexus.com.br");
+            helper.setReplyTo("copanexusofc@gmail.com");
             helper.setTo(para);
             helper.setSubject("Bem-vindo ao CopaNexus! ⚽");
 
@@ -61,7 +62,8 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("onboarding@resend.dev");
+            helper.setFrom("suporte@copanexus.com.br");
+            helper.setReplyTo("copanexusofc@gmail.com");
             helper.setTo(para);
             helper.setSubject("Recuperação de Senha - CopaNexus 🔐");
 
