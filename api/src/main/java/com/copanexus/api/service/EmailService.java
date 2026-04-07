@@ -23,7 +23,7 @@ public class EmailService {
             // O 'true' indica que vamos enviar um e-mail multipart (HTML/Anexos)
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("nao-responda@copanexus.com.br");
+            helper.setFrom("copanexusofc@gmail.com");
             helper.setTo(para);
             helper.setSubject("Bem-vindo ao CopaNexus! ⚽");
 
