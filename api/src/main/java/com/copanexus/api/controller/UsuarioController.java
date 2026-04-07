@@ -6,6 +6,7 @@ import com.copanexus.api.model.Figurinhas;
 import com.copanexus.api.model.Usuario;
 import com.copanexus.api.repository.FigurinhasRepository;
 import com.copanexus.api.repository.UsuarioRepository;
+import com.copanexus.api.security.TokenService;
 import com.copanexus.api.service.EmailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class UsuarioController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private TokenService tokenService; // Isso mata o erro de "Cannot resolve symbol"
 
     // ROTA: GET http://localhost:8080/api/usuarios
     @GetMapping
@@ -104,12 +108,17 @@ public class UsuarioController {
             Usuario usuario = usuarioOpt.get();
             // BCrypt compara a senha pura com o Hash do banco
             if (encoder.matches(loginData.getSenha(), usuario.getSenha())) {
-                // Retorna os dados do usuário (menos a senha por segurança)
-                usuario.setSenha(null);
-                return ResponseEntity.ok(usuario);
+                // GERA O TOKEN
+                String token = tokenService.gerarToken(usuario);
+
+                // Retorna um mapa com o token e os dados básicos
+                Map<String, Object> response = new HashMap<>();
+                response.put("token", token);
+                response.put("usuario", UsuarioResponseDTO.transformar(usuario));
+
+                return ResponseEntity.ok(response);
             }
         }
-
         // Se o e-mail não existir ou a senha estiver errada
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("E-mail ou senha inválidos.");
     }
