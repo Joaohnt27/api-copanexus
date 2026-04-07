@@ -6,20 +6,19 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Data
+@NoArgsConstructor
 @Entity
-@Table(name = "users") public class Usuario {
-
-    @PreRemove
-    private void removerVinculos() {
-        // Antes do Hibernate deletar o usuário, ele limpa os vínculos na tabela 'usuario_figurinhas'
-        this.colecao.clear();
-        this.repetidas.clear();
-    }
+@Table(name = "users")
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +38,6 @@ import java.util.*;
     @Column(nullable = false)
     private String senha;
 
-    // Esqueceu senha
     @JsonIgnore
     private String codigoRecuperacao;
 
@@ -49,27 +47,70 @@ import java.util.*;
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "usuario_figurinhas", // Nome da tabela que o Hibernate vai criar no Neon
+            name = "usuario_figurinhas",
             joinColumns = @JoinColumn(name = "usuario_id"),
             inverseJoinColumns = @JoinColumn(name = "figurinha_id")
     )
     private Set<Figurinhas> colecao = new HashSet<>();
 
-    // Repetidas
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
-            name = "usuario_repetidas", // O Java vai criar essa tabela no Neon sozinho!
+            name = "usuario_repetidas",
             joinColumns = @JoinColumn(name = "usuario_id")
     )
-    @MapKeyColumn(name = "figurinha_numero") // A Chave (Qual é a figurinha)
-    @Column(name = "quantidade")             // O Valor (Quantas ele tem repetida)
+    @MapKeyColumn(name = "figurinha_numero")
+    @Column(name = "quantidade")
     private Map<Integer, Integer> repetidas = new HashMap<>();
 
-    // Histórico Financeiro
     @JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transacao> transacoes;
 
-    public Usuario() {}
-}
+    // --- MÉTODOS OBRIGATÓRIOS DO USERDETAILS (SPRING SECURITY) ---
 
+    @Override
+    @JsonIgnore // Evita que as authorities poluam o JSON de resposta
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Define que todo usuário logado tem a permissão básica "USER"
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.senha;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email; // No nosso sistema, o login é feito via e-mail
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // Conta nunca expira
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // Conta nunca bloqueia
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // Senha nunca expira
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true; // Usuário sempre ativo
+    }
+
+    // --- LÓGICA DE CICLO DE VIDA ---
+
+    @PreRemove
+    private void removerVinculos() {
+        // Limpa os registros nas tabelas de relacionamento antes de deletar o usuário
+        this.colecao.clear();
+        this.repetidas.clear();
+    }
+}
