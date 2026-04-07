@@ -88,7 +88,7 @@ public class UsuarioController {
 
             try {
                 emailService.enviarEmailBoasVindas(salvo.getEmail(), salvo.getNome());
-                System.out.println("E-mail enviado com sucesso para a caixa do Mailtrap!");
+                System.out.println("E-mail enviado com sucesso!");
             } catch (Exception e) {
                 System.err.println("Aviso: Falha ao enviar e-mail de boas-vindas - " + e.getMessage());
             }

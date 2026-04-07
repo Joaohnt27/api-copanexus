@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,6 +14,7 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Async
     public void enviarEmailBoasVindas(String para, String nomeUsuario) {
         try {
             // Cria um e-mail "complexo" que suporta HTML
@@ -53,6 +55,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void enviarEmailRecuperacaoSenha(String para, String codigo) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
