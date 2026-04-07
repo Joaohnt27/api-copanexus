@@ -36,7 +36,7 @@ public class EmailService {
                     + "<p style='color: #475569; line-height: 1.6;'>Sua conta foi criada com sucesso! Estamos muito felizes em ter você conosco.</p>"
                     + "<p style='color: #475569; line-height: 1.6;'>A partir de agora, você pode organizar seu catálogo geral, gerenciar seu estoque de repetidas e ter controle total do seu fluxo de caixa na coleção.</p>"
                     + "<div style='text-align: center; margin: 35px 0;'>"
-                    + "<a href='http://localhost:5173' style='background-color: #102C57; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;'>Acessar Minha Coleção</a>"
+                    + "<a href='https://copanexus.vercel.app' style='background-color: #102C57; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;'>Acessar Minha Coleção</a>"
                     + "</div>"
                     + "<p style='color: #475569; line-height: 1.6; margin-bottom: 5px;'>Bora completar esse álbum!</p>"
                     + "<p style='color: #102C57; font-weight: 900; margin-top: 0;'>Equipe CopaNexus</p>"
