@@ -66,8 +66,6 @@ public class Usuario implements UserDetails {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transacao> transacoes;
 
-    // --- MÉTODOS OBRIGATÓRIOS DO USERDETAILS (SPRING SECURITY) ---
-
     @Override
     @JsonIgnore // Evita que as authorities poluam o JSON de resposta
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -82,7 +80,7 @@ public class Usuario implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email; // No nosso sistema, o login é feito via e-mail
+        return this.email;
     }
 
     @Override
@@ -104,8 +102,6 @@ public class Usuario implements UserDetails {
     public boolean isEnabled() {
         return true; // Usuário sempre ativo
     }
-
-    // --- LÓGICA DE CICLO DE VIDA ---
 
     @PreRemove
     private void removerVinculos() {

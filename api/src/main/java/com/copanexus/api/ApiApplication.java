@@ -32,9 +32,9 @@ public class ApiApplication {
 				// Salva tudo de uma vez (Batch Save) - Mais rápido!
 				repository.saveAll(listaParaSalvar);
 
-				System.out.println(">>> Sucesso! 980 figurinhas prontas para colecionar. 🚀");
+				System.out.println(">>> Sucesso! 980 figurinhas prontas para colecionar.");
 			} else {
-				System.out.println(">>> Figurinhas já detectadas no banco. Pulando carga.");
+				System.out.println(">>> Figurinhas detectadas no banco. Pulando carga.");
 			}
 		};
 	}
