@@ -54,7 +54,8 @@ public class SecurityConfig {
                 "https://copanexus.vercel.app",
                 "https://copanexus.com.br",
                 "https://www.copanexus.com.br",
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "http://localhost:4173"
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
