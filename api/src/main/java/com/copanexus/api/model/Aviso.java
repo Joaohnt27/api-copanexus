@@ -34,6 +34,7 @@ public class Aviso {
 
     @PrePersist
     protected void onCreate() {
-        this.dataCriacao = LocalDateTime.now();
+        // OffsetDateTime.now(ZoneOffset.UTC) garante que o tempo salvo seja o de Londres (GMT 0)
+        this.dataCriacao = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 }
