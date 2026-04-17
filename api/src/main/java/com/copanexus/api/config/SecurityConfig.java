@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/registrar").permitAll() // Registro liberado
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/esqueci-senha").permitAll() // Recuperação liberada
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/redefinir-senha").permitAll() // Redefinição liberada
-                        .requestMatchers(HttpMethod.GET, "/api/avisos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/avisos").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/avisos").permitAll()
                         .anyRequest().authenticated() // TODO O RESTO EXIGE TOKEN!
                 )
