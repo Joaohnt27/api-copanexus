@@ -32,6 +32,7 @@ public class AvisoController {
         if (!CHAVE_MESTRE.equals(key)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Chave inválida!");
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(repository.save(aviso));
+        Aviso salvo = repository.save(aviso);
+        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 }
