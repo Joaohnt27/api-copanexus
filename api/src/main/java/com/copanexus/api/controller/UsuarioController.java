@@ -170,7 +170,7 @@ public class UsuarioController {
     @GetMapping("/{id}/progresso")
     public ResponseEntity<Map<String, Object>> obterProgresso(@PathVariable Long id) {
         return repository.findById(id).map(usuario -> {
-            int totalFigurinhas = 980;
+            int totalFigurinhas = 994;
             int minhasFigurinhas = usuario.getColecao().size();
 
             // Cálculo da porcentagem (Regra de 3 básica)
