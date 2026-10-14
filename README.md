@@ -20,6 +20,7 @@ The application uses Portuguese resource paths and JSON field names. This README
 - [Build and testing](#build-and-testing)
 - [Deployment and operational notes](#deployment-and-operational-notes)
 - [Current implementation limitations](#current-implementation-limitations)
+- [License](#license)
 
 ## Technology and structure
 
@@ -522,4 +523,8 @@ These are observable properties of the present code and should be considered whe
 9. **Financial representation:** transaction values use floating-point numbers and have no enforced currency, sign, or transaction-type rules.
 10. **Coverage and operations:** only a context-loading test exists; no migration tooling, health endpoint, or deployment automation is included.
 
-No license file is included in this repository.
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Copyright (c) 2026 João Henrique.
