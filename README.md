@@ -1,13 +1,35 @@
 # CopaNexus API
 
-REST API for CopaNexus, a sticker collection manager. It supports user accounts, JWT authentication, password recovery by email, collected stickers, duplicate inventory, purchase/sale records, and an announcements feed.
+Java and Spring Boot REST API for **CopaNexus**, a platform created to help collectors organize their 2026 World Cup sticker albums, track duplicates for exchanges, and record sticker purchases and sales.
 
-**Project status:** The production API was shut down on October 13, 2026. This repository is retained for reference and local development. The production domains referenced in configuration and email templates are historical references.
+The platform operated in production from **April 6 to October 13, 2026**, reaching **161 registered users** and a total of **42,819 stickers managed across their collections and duplicate inventories**.
 
-The application uses Portuguese resource paths and JSON field names. This README documents the implementation in this repository, including its current limitations.
+## Production results
+
+| Metric | Result |
+| --- | ---: |
+| Registered users | **161** |
+| Total stickers managed | **42,819** |
+| Stickers marked as collected | **39,767** |
+| Duplicate stickers organized for exchanges | **3,052** |
+| Production period | **April 6 – October 13, 2026** |
+
+These figures describe aggregate collection and duplicate inventory quantities reported at the end of the production period. Collected stickers are unique within each user's collection; the same catalog sticker can appear in multiple users' collections. Duplicate inventory represents stickers organized for potential exchanges, not completed trades. The total is the sum of collected stickers and duplicates, not an API request count.
+
+## Project context
+
+CopaNexus brought collection progress, duplicate tracking, and purchase/sale records into one application. Its backend supports user accounts, JWT authentication, password recovery by email, persistent collection data, and a community announcements feed.
+
+Developed by **João Henrique Nazar Tavares**, the project provided practical experience building and operating a Java backend for real users: modeling relationships in PostgreSQL, integrating the API with a frontend, implementing authentication and email delivery, and configuring the production environment.
+
+**Project status:** The production API was shut down on October 13, 2026, concluding this phase of the project. The source code is publicly available for portfolio review, reference, and local development. Production domains referenced in configuration and email templates are historical references.
+
+The application uses Portuguese resource paths and JSON field names. The technical documentation below describes the implementation preserved in this repository, including its current limitations.
 
 ## Contents
 
+- [Production results](#production-results)
+- [Project context](#project-context)
 - [Technology and structure](#technology-and-structure)
 - [Local setup](#local-setup)
 - [Configuration](#configuration)
