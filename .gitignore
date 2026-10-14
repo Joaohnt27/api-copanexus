@@ -1,0 +1,15 @@
+# Local IDE settings and database connections
+.idea/
+*.iml
+
+# Local credentials and environment overrides
+.env
+.env.*
+!.env.example
+**/application-local.properties
+**/application-local.yml
+**/application-local.yaml
+
+# Build output and operating-system metadata
+**/target/
+.DS_Store
